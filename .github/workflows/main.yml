@@ -1,0 +1,59 @@
+# 1. Nombre del script (puedes poner lo que quieras)
+name: Desplegar Portfolio de Astro
+
+# 2. Cuándo debe ejecutarse
+on:
+  # Se ejecutará cada vez que subas cambios (push) a la rama 'main'
+  push:
+    branches: [ "main" ]
+  # También te permite ejecutarlo a mano si vas a la pestaña "Actions"
+  workflow_dispatch:
+
+# 3. Permisos que necesita el robot para escribir en GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 4. Los "Trabajos" que va a hacer
+jobs:
+  # 4A. El trabajo de "Construir" (compilar)
+  build:
+    runs-on: ubuntu-latest # Se ejecuta en un ordenador virtual con Linux
+    steps:
+      # Paso 1: Descargar tu código en el ordenador virtual
+      - name: Checkout (Descargar código)
+        uses: actions/checkout@v4
+
+      # Paso 2: Instalar Node.js (que Astro necesita)
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18 # O 20, la que uses. 18 está bien.
+
+      # Paso 3: Instalar las dependencias de tu proyecto (Tailwind, Astro, etc.)
+      - name: Install dependencies
+        run: npm install # Si usas pnpm o yarn, cambia esto
+
+      # Paso 4: ¡El paso clave! Construir la web
+      - name: Build (Construir sitio)
+        run: npm run build # Ejecuta el comando 'build' de tu package.json
+
+      # Paso 5: Guardar la web construida (la carpeta 'dist')
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist # Astro por defecto construye en la carpeta 'dist'
+
+  # 4B. El trabajo de "Desplegar" (publicar)
+  deploy:
+    needs: build # Le decimos que espere a que el trabajo 'build' termine
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # Paso 6: Coger los archivos guardados y publicarlos
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
