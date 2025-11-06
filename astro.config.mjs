@@ -8,6 +8,6 @@ export default defineConfig({
   site: 'https://ddani22.github.io', 
   
   base: '/Portfolio',
-  
+
   integrations: [tailwind()]
 });
